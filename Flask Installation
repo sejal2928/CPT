@@ -1,0 +1,53 @@
+!pip install flask-ngrok  # Install flask-ngrok to expose Flask app to the internet
+
+from flask import Flask, render_template, request, redirect, url_for
+import csv
+
+app = Flask(__name__)
+
+# Define the CSV file and headers
+csv_file = 'patients.csv'
+headers = ['patient_id', 'first_name', 'last_name', 'dob', 'gender', 'phone_number', 'address']
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/save_data', methods=['POST'])
+def save_data():
+    patient_id = request.form['patient_id']
+    first_name = request.form['first_name']
+    last_name = request.form['last_name']
+    dob = request.form['dob']
+    gender = request.form['gender']
+    phone_number = request.form['phone_number']
+    address = request.form['address']
+
+    # Validate data (you can add more validation as needed)
+    if not all([patient_id, first_name, last_name, dob, gender, phone_number, address]):
+        return "All fields must be filled"
+
+    # Save data to the CSV file using the provided backend code
+    patient_data = {
+        'patient_id': patient_id,
+        'first_name': first_name,
+        'last_name': last_name,
+        'dob': dob,
+        'gender': gender,
+        'phone_number': phone_number,
+        'address': address
+    }
+
+    with open(csv_file, mode='a', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
+        if file.tell() == 0:
+            writer.writeheader()
+        writer.writerow(patient_data)
+
+    return "Data saved successfully"
+
+if __name__ == '__main__':
+    from flask_ngrok import run_with_ngrok
+    run_with_ngrok(app)  # Start ngrok when the app is run
+
+    app.run()
